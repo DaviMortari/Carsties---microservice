@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver.Core.Bindings;
 using MongoDB.Entities;
 using SearchService.Models;
 using SearchService.RequestHelpers;
@@ -21,20 +22,26 @@ public class SearchController : ControllerBase
             query.Match(Search.Full, searchParams.SearchTerm).SortByTextScore();
         }
 
-        query = searchParams.OrderBy switch
+        query = searchParams.OrderBy switch //ordenação
         {
             "make" => query.Sort(x => x.Ascending(a => a.Make)),
             "new" => query.Sort(x => x.Descending(a => a.CreatedAt)),
             _ => query.Sort(x => x.Ascending(a => a.AuctionEnd))
         };
 
-        query = searchParams.FilterBy switch
+        query = searchParams.FilterBy switch //filtragem
         {
             "finished" => query.Match(x => x.AuctionEnd < DateTime.UtcNow),
             "endingSoon" => query.Match(x => x.AuctionEnd < DateTime.UtcNow.AddHours(6)
                 && x.AuctionEnd > DateTime.UtcNow),
             _ => query.Match(x => x.AuctionEnd > DateTime.UtcNow)
         };
+
+        if(!string.IsNullOrEmpty(searchParams.Seller))
+            query.Match(x => x.Seller == searchParams.Seller);
+
+        if(!string.IsNullOrEmpty(searchParams.Winner))
+            query.Match(x => x.Winner == searchParams.Winner);
         
         query.PageNumber(searchParams.PageNumber);
         query.PageSize(searchParams.PageSize);
