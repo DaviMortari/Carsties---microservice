@@ -3,6 +3,7 @@ using AuctionService.Data;
 using AuctionService.DTOs;
 using AuctionService.entities;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,20 +16,37 @@ public class AuctionController : ControllerBase
     private readonly AuctionDbContext _context;
     private readonly IMapper _mapper;
 
-    public AuctionController(AuctionDbContext context, IMapper mapper)
+    private readonly ILogger<AuctionController> _logger;
+
+    public AuctionController(AuctionDbContext context, IMapper mapper, ILogger<AuctionController> logger)
     {
         _context = context;
         _mapper = mapper;
+        _logger = logger;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AuctionDto>>>GetAllAuctions()
+    public async Task<ActionResult<List<AuctionDto>>>GetAllAuctions(string date)
     {
-        var auctions = await _context.Auctions
-            .Include(x => x.Item)
-            .OrderBy(x => x.Item.Make)
-            .ToListAsync();
-        return _mapper.Map<List<AuctionDto>>(auctions);
+        _logger.LogInformation("Received date parameter: {Date}", date);
+
+        var query = _context.Auctions.OrderBy(x => x.Item.Make).AsQueryable();
+
+        if(!string.IsNullOrEmpty(date))
+        {
+            if (DateTime.TryParse(date, out var parsedDate))
+        {
+            var utcDate = parsedDate.ToUniversalTime();
+            query = query.Where(x => x.UpdatedAt.CompareTo(utcDate) > 0);
+        }
+        else
+        {
+            // Retorna um erro 400 Bad Request se a data for inválida
+            return BadRequest("The provided date is not valid.");
+        }
+        }
+
+        return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync();
     }
 
     [HttpGet("{id}")]
