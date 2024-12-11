@@ -3,7 +3,6 @@ using MongoDB.Entities;
 using SearchService.Models;
 
 namespace SearchService.Services;
-
 public class AuctionSvcHttpClient
 {
     private readonly HttpClient _httpClient;
@@ -20,9 +19,9 @@ public class AuctionSvcHttpClient
         var lastUpdated = await DB.Find<Item, string>()
             .Sort(x => x.Descending(x => x.UpdatedAt))
             .Project(x => x.UpdatedAt.ToString())
-            .ExecuteAnyAsync();
-        
-        return await _httpClient.GetFromJsonAsync<List<Item>>(_config["AuctionServiceUrl"]
+            .ExecuteFirstAsync();
+
+        return await _httpClient.GetFromJsonAsync<List<Item>>(_config["AuctionServiceUrl"] 
             + "/api/auctions?date=" + lastUpdated);
     }
 }
