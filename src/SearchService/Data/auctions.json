@@ -171,7 +171,7 @@
         "createdAt": "2025-10-15T21:13:44.617326Z",
         "updatedAt": "2025-10-15T21:13:44.617326Z",
         "auctionEnd": "2025-10-05T21:13:44.617327Z",
-        "status": "ReserveNotMet",
+        "status": "ReserveNotMet", 
         "make": "Mercedes",
         "model": "SLK",
         "year": 2020,

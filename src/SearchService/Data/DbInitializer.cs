@@ -11,7 +11,7 @@ public class DbInitializer
 {
     public static async Task InitDb(WebApplication app)
     {
-        await DB.InitAsync("SearchDb", MongoClientSettings
+        await DB.InitAsync("SearchDB", MongoClientSettings
             .FromConnectionString(app.Configuration.GetConnectionString("MongoDbConnection")));
 
         await DB.Index<Item>()
